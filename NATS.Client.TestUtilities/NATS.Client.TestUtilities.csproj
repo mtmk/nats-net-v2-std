@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+    <IsTrimmable>true</IsTrimmable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.5.1" />
+    <PackageReference Include="ProcessX" Version="1.5.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Xunit.Abstractions" />
+    <Using Include="FluentAssertions" />
+    <Using Include="NATS.Client.Core" />
+    <Using Include="NATS.Client.Core.Internal" />
+    <Using Include="NATS.Client.Core.Commands" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NATS.Client.Core\NATS.Client.Core.csproj" />
+  </ItemGroup>
+
+</Project>
