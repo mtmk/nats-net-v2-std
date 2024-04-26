@@ -1,5 +1,7 @@
 namespace NATS.Client.Core.Tests;
 
+using NATS.Client.TestUtilities;
+
 public class SubscriptionTest
 {
     private readonly ITestOutputHelper _output;
@@ -86,27 +88,39 @@ public class SubscriptionTest
     [Fact]
     public async Task Auto_unsubscribe_on_max_messages_with_inbox_subscription_test()
     {
-        await using var server = NatsServer.Start();
+        Logger.Log = s => _output.WriteLine($"___[] {s}");
+        _output.WriteLine($"__________________________ <<< START >>>");
+        await using var server = NatsServer.StartWithTrace(_output);
         await using var nats = server.CreateClientConnection();
         var subject = nats.NewInbox();
 
+        _output.WriteLine($"__________________________ <<< [1] >>>");
         await using var sub1 = await nats.SubscribeCoreAsync<int>(subject, opts: new NatsSubOpts { MaxMsgs = 1 });
         await using var sub2 = await nats.SubscribeCoreAsync<int>(subject, opts: new NatsSubOpts { MaxMsgs = 2 });
 
+        _output.WriteLine($"__________________________ <<< [2] >>>");
         for (var i = 0; i < 3; i++)
         {
+            _output.WriteLine($"__________________________ <<< [3]-{i} >>>");
             await nats.PublishAsync(subject, i);
         }
 
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10000));
+        _output.WriteLine($"__________________________ <<< [4] >>>");
+
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var cancellationToken = cts.Token;
+
+        _output.WriteLine($"__________________________ <<< [5] >>>");
 
         var count1 = 0;
         await foreach (var natsMsg in sub1.Msgs.ReadAllAsync(cancellationToken))
         {
+            _output.WriteLine($"__________________________ <<< [6]-{count1} >>>");
             Assert.Equal(count1, natsMsg.Data);
             count1++;
         }
+
+        _output.WriteLine($"__________________________ <<< [7] >>>");
 
         Assert.Equal(1, count1);
         Assert.Equal(NatsSubEndReason.MaxMsgs, ((NatsSubBase)sub1).EndReason);

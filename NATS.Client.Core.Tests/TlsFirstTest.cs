@@ -2,6 +2,7 @@ namespace NATS.Client.Core.Tests;
 
 public class TlsFirstTest
 {
+#if NET6_0_OR_GREATER
     private readonly ITestOutputHelper _output;
 
     public TlsFirstTest(ITestOutputHelper output) => _output = output;
@@ -40,7 +41,7 @@ public class TlsFirstTest
         }
     }
 
-    [Fact]
+    [Fact(Timeout = 30000)]
     public async Task Implicit_TLS_fails_when_disabled()
     {
         await using var server = NatsServer.Start(
@@ -74,4 +75,5 @@ public class TlsFirstTest
             _output.WriteLine($"Explicit TLS connection (RTT: {rtt})");
         }
     }
+#endif
 }

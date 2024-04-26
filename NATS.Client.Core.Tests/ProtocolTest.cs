@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NATS.Client.TestUtilities;
+using NATS.Client.TestUtilities;
 
 namespace NATS.Client.Core.Tests;
 
@@ -572,9 +573,9 @@ public class ProtocolTest
 
         protected override ValueTask ReceiveInternalAsync(string subject, string? replyTo, ReadOnlySequence<byte>? headersBuffer, ReadOnlySequence<byte> payloadBuffer)
         {
-            _callback(int.Parse(Encoding.UTF8.GetString(payloadBuffer)));
+            _callback(int.Parse(Encoding.UTF8.GetString(payloadBuffer.ToArray())));
             DecrementMaxMsgs();
-            return ValueTask.CompletedTask;
+            return default;
         }
 
         protected override void TryComplete()

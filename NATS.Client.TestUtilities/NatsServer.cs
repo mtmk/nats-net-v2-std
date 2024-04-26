@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Cysharp.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NATS.Client.TestUtilities;
 
 namespace NATS.Client.Core.Tests;
 
@@ -181,7 +182,11 @@ public class NatsServer : IAsyncDisposable
             {
                 try
                 {
+#if NETSTANDARD
+                    await client.ConnectAsync("127.0.0.1", Opts.ServerPort);
+#else
                     await client.ConnectAsync("127.0.0.1", Opts.ServerPort, _cancellationTokenSource.Token);
+#endif
                     if (client.Connected)
                         return;
                 }

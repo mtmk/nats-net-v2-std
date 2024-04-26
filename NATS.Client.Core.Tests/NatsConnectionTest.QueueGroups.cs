@@ -1,5 +1,7 @@
 namespace NATS.Client.Core.Tests;
 
+using NATS.Client.TestUtilities;
+
 public abstract partial class NatsConnectionTest
 {
     [Fact]

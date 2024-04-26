@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Text;
+using NATS.Client.TestUtilities;
 
 namespace NATS.Client.Core.Tests;
 
@@ -313,7 +314,7 @@ public class RequestReplyTest
             }
         });
 
-        var writer = new ArrayBufferWriter<byte>();
+        var writer = new NatsBufferWriter<byte>();
         await foreach (var msg in nats.RequestManyAsync<string, string>("foo", "1", cancellationToken: cts.Token))
         {
             writer.Write(Encoding.UTF8.GetBytes(msg.Data!));

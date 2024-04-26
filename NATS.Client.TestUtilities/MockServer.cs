@@ -32,7 +32,11 @@ public class MockServer : IAsyncDisposable
                 var n = 0;
                 while (!cancellationToken.IsCancellationRequested)
                 {
+#if NETSTANDARD
+                    var tcpClient = await _server.AcceptTcpClientAsync();
+#else
                     var tcpClient = await _server.AcceptTcpClientAsync(cancellationToken);
+#endif
                     var client = new Client(this, tcpClient);
                     n++;
                     Log($"[S] [{n}] New client connected");
@@ -142,6 +146,9 @@ public class MockServer : IAsyncDisposable
         {
         }
         catch (OperationCanceledException)
+        {
+        }
+        catch (ObjectDisposedException)
         {
         }
         catch (SocketException)

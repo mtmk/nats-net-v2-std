@@ -98,7 +98,11 @@ public partial class NatsConnection
         }
     }
 
+#if NET6_0_OR_GREATER
     [SkipLocalsInit]
+#else
+    internal static string NewInbox(string prefix) => NewInbox(prefix.AsSpan());
+#endif
     internal static string NewInbox(ReadOnlySpan<char> prefix)
     {
         Span<char> buffer = stackalloc char[64];
@@ -121,12 +125,18 @@ public partial class NatsConnection
             var remaining = buffer.Slice((int)totalPrefixLength);
             var didWrite = NuidWriter.TryWriteNuid(remaining);
             Debug.Assert(didWrite, "didWrite");
+#if NET6_0_OR_GREATER
             return new string(buffer);
+#else
+            return new string(buffer.ToArray());
+#endif
         }
 
         return Throw();
 
+#if NET6_0_OR_GREATER
         [DoesNotReturn]
+#endif
         string Throw()
         {
             Debug.Fail("Must not happen");

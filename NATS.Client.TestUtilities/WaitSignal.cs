@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using NATS.Client.TestUtilities;
 
 namespace NATS.Client.Core.Tests;
 

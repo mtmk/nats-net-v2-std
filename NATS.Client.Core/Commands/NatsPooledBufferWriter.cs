@@ -192,7 +192,7 @@ internal sealed class NatsPooledBufferWriter<T> : IBufferWriter<T>, IObjectPoolN
     private void ResizeBuffer(int sizeHint)
     {
         var minimumSize = (uint)_index + (uint)sizeHint;
-
+#if NET6_0_OR_GREATER
         // The ArrayPool<T> class has a maximum threshold of 1024 * 1024 for the maximum length of
         // pooled arrays, and once this is exceeded it will just allocate a new array every time
         // of exactly the requested size. In that case, we manually round up the requested size to
@@ -202,7 +202,7 @@ internal sealed class NatsPooledBufferWriter<T> : IBufferWriter<T>, IObjectPoolN
         {
             minimumSize = BitOperations.RoundUpToPowerOf2(minimumSize);
         }
-
+#endif
         _pool.Resize(ref _array, (int)minimumSize);
     }
 }

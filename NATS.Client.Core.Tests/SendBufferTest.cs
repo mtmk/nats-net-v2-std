@@ -83,7 +83,7 @@ public class SendBufferTest
         }
     }
 
-    [Fact]
+    [Fact(Timeout = 60000)]
     public async Task Send_recover_half_sent()
     {
         // void Log(string m) => TmpFileLogger.Log(m);
@@ -143,7 +143,11 @@ public class SendBufferTest
         Log($"[C] publishing close (8MB)...");
         var pubTask = nats.PublishAsync("close", new byte[1024 * 1024 * 8], cancellationToken: cts.Token).AsTask();
 
+#if NETFRAMEWORK
+        await pubTask;
+#else
         await pubTask.WaitAsync(cts.Token);
+#endif
 
         for (var i = 1; i <= 10; i++)
         {

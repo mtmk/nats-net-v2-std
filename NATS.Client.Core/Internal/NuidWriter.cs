@@ -5,7 +5,9 @@ using System.Security.Cryptography;
 
 namespace NATS.Client.Core.Internal;
 
+#if NET6_0_OR_GREATER
 [SkipLocalsInit]
+#endif
 internal sealed class NuidWriter
 {
     internal const nuint NuidLength = PrefixLength + SequentialLength;
@@ -28,7 +30,11 @@ internal sealed class NuidWriter
         Refresh(out _);
     }
 
+#if NET6_0_OR_GREATER
     private static ReadOnlySpan<char> Digits => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+#else
+    private static ReadOnlySpan<char> Digits => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".AsSpan();
+#endif
 
     public static bool TryWriteNuid(Span<char> nuidBuffer)
     {
@@ -45,7 +51,11 @@ internal sealed class NuidWriter
         Span<char> buffer = stackalloc char[22];
         if (TryWriteNuid(buffer))
         {
+#if NET6_0_OR_GREATER
             return new string(buffer);
+#else
+            return new string(buffer.ToArray());
+#endif
         }
 
         throw new InvalidOperationException("Internal error: can't generate nuid");
@@ -75,16 +85,31 @@ internal sealed class NuidWriter
 
     private static uint GetIncrement()
     {
+#if NET6_0_OR_GREATER
         return (uint)Random.Shared.Next(MinIncrement, MaxIncrement + 1);
+#else
+        return (uint)new Random((int)DateTime.UtcNow.Ticks).Next(MinIncrement, MaxIncrement + 1);
+#endif
     }
 
     private static ulong GetSequential()
     {
+#if NET6_0_OR_GREATER
         return (ulong)Random.Shared.NextInt64(0, (long)MaxSequential + 1);
+#else
+        var max = MaxSequential + 1;
+        var rand = new Random((int)DateTime.UtcNow.Ticks);
+        uint low = (uint)rand.Next(int.MinValue, int.MaxValue);
+        uint high = (uint)rand.Next(int.MinValue, int.MaxValue);
+        ulong r = ((ulong)high << 32) | low;
+        double scale = (double)max / ulong.MaxValue;
+        return (ulong)(r * scale);
+#endif
     }
 
     private static char[] GetPrefix(RandomNumberGenerator? rng = null)
     {
+#if NET6_0_OR_GREATER
         Span<byte> randomBytes = stackalloc byte[(int)PrefixLength];
 
         // TODO: For .NET 8+, use GetItems for better distribution
@@ -92,6 +117,15 @@ internal sealed class NuidWriter
         {
             RandomNumberGenerator.Fill(randomBytes);
         }
+#else
+        byte[] randomBytes = new byte[(int)PrefixLength];
+
+        if (rng == null)
+        {
+            using var randomNumberGenerator = RandomNumberGenerator.Create();
+            randomNumberGenerator.GetBytes(randomBytes);
+        }
+#endif
         else
         {
             rng.GetBytes(randomBytes);
@@ -135,7 +169,9 @@ internal sealed class NuidWriter
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
+#if NET6_0_OR_GREATER
     [MemberNotNull(nameof(_prefix))]
+#endif
     private char[] Refresh(out ulong sequential)
     {
         var prefix = _prefix = GetPrefix();

@@ -37,5 +37,7 @@ internal sealed class ActivityEndingMsgReader<T> : ChannelReader<NatsMsg<T>>
 
     public override bool TryPeek(out NatsMsg<T> item) => _inner.TryPeek(out item);
 
+#if NET6_0_OR_GREATER
     public override IAsyncEnumerable<NatsMsg<T>> ReadAllAsync(CancellationToken cancellationToken = default) => _inner.ReadAllAsync(cancellationToken);
+#endif
 }

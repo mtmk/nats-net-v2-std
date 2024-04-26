@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -47,7 +48,11 @@ internal sealed class TcpConnection : ISocketConnection
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueTask ConnectAsync(string host, int port, CancellationToken cancellationToken)
     {
+#if NET6_0_OR_GREATER
         return _socket.ConnectAsync(host, port, cancellationToken);
+#else
+        return new ValueTask(_socket.ConnectAsync(host, port).WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken));
+#endif
     }
 
     /// <summary>
@@ -58,7 +63,11 @@ internal sealed class TcpConnection : ISocketConnection
         using var cts = new CancellationTokenSource(timeout);
         try
         {
+#if NET6_0_OR_GREATER
             await _socket.ConnectAsync(host, port, cts.Token).ConfigureAwait(false);
+#else
+            await _socket.ConnectAsync(host, port).WaitAsync(timeout, cts.Token).ConfigureAwait(false);
+#endif
         }
         catch (Exception ex)
         {
@@ -77,18 +86,33 @@ internal sealed class TcpConnection : ISocketConnection
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueTask<int> SendAsync(ReadOnlyMemory<byte> buffer)
     {
+#if NET6_0_OR_GREATER
         return _socket.SendAsync(buffer, SocketFlags.None, CancellationToken.None);
+#else
+        MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment);
+        return new ValueTask<int>(_socket.SendAsync(segment, SocketFlags.None));
+#endif
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueTask<int> ReceiveAsync(Memory<byte> buffer)
     {
+#if NET6_0_OR_GREATER
         return _socket.ReceiveAsync(buffer, SocketFlags.None, CancellationToken.None);
+#else
+        MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment);
+        return new ValueTask<int>(_socket.ReceiveAsync(segment, SocketFlags.None));
+#endif
     }
 
     public ValueTask AbortConnectionAsync(CancellationToken cancellationToken)
     {
+#if NET6_0_OR_GREATER
         return _socket.DisconnectAsync(false, cancellationToken);
+#else
+        _socket.Disconnect(false);
+        return default;
+#endif
     }
 
     public ValueTask DisposeAsync()
@@ -114,7 +138,7 @@ internal sealed class TcpConnection : ISocketConnection
             _socket.Dispose();
         }
 
-        return ValueTask.CompletedTask;
+        return default;
     }
 
     // when catch SocketClosedException, call this method.
@@ -131,7 +155,11 @@ internal sealed class TcpConnection : ISocketConnection
         {
             return new SslStreamConnection(
                 _logger,
+#if NET6_0_OR_GREATER
                 new SslStream(new NetworkStream(_socket, true)),
+#else
+                new SslStream(new NetworkStream(_socket, true), false, (sender, certificate, chain, errors) => true),
+#endif
                 tlsOpts,
                 _waitForClosedSource);
         }
