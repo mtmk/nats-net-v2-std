@@ -81,7 +81,7 @@ public abstract partial class NatsConnectionTest
         Assert.Equal(503, code);
     }
 
-    [Fact]
+    [Fact(Timeout = 30000)]
     public async Task EncodingTest()
     {
         await using var server = NatsServer.Start(_output, _transportType);
@@ -439,7 +439,7 @@ public class SampleClass : IEquatable<SampleClass>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, Name);
+        return Id.GetHashCode() + Name.GetHashCode();
     }
 
     public override string ToString()

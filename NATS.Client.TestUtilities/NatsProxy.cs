@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -259,15 +260,29 @@ public class NatsProxy : IDisposable
         {
             var size = int.Parse(match.Groups[1].Value);
             var buffer = new char[size + 2];
+#if NETSTANDARD
+            var bufferIndex = 0;
+#else
             var span = buffer.AsSpan();
+#endif
             while (true)
             {
+#if NETSTANDARD
+                var read = sr.Read(buffer, bufferIndex, buffer.Length - bufferIndex);
+#else
                 var read = sr.Read(span);
+#endif
                 if (read == 0)
                     break;
                 if (read == -1)
                     return false;
+#if NETSTANDARD
+                bufferIndex += read;
+                if (bufferIndex == buffer.Length)
+                    break;
+#else
                 span = span[read..];
+#endif
             }
 
             var bufferDump = Dump(buffer.AsSpan()[..size]);

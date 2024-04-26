@@ -102,7 +102,9 @@ public class NatsHeaders : IDictionary<string, StringValues>
 
     private Dictionary<string, StringValues>? Store { get; set; }
 
+#if NET6_0_OR_GREATER
     [MemberNotNull(nameof(Store))]
+#endif
     private void EnsureStore(int capacity)
     {
         if (Store == null)

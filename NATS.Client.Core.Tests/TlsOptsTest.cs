@@ -9,6 +9,7 @@ namespace NATS.Client.Core.Tests;
 
 public class TlsOptsTest
 {
+#if NET6_0_OR_GREATER
     [Fact]
     public async Task Load_ca_cert()
     {
@@ -198,4 +199,5 @@ public class TlsOptsTest
             Assert.True(rtt > TimeSpan.Zero);
         }
     }
+#endif
 }

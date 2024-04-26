@@ -1,5 +1,7 @@
 namespace NATS.Client.Core.Tests;
 
+using NATS.Client.TestUtilities;
+
 public class ConnectionRetryTest
 {
     private readonly ITestOutputHelper _output;

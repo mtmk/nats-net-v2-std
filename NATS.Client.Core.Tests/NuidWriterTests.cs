@@ -47,7 +47,7 @@ public class NuidWriterTests
 
         // Assert
         ReadOnlySpan<char> lower = buffer.Slice(0, 22);
-        string resultAsString = new(lower);
+        string resultAsString = new(lower.ToArray());
         ReadOnlySpan<char> upper = buffer.Slice(22);
 
         Assert.True(result);
@@ -113,7 +113,7 @@ public class NuidWriterTests
 
         // Assert
         Assert.True(result);
-        string resultAsString = new(nuid);
+        string resultAsString = new(nuid.ToArray());
         Assert.Matches("[A-z0-9]{22}", resultAsString);
     }
 
@@ -150,7 +150,7 @@ public class NuidWriterTests
         DeterministicRng rng = new(new Queue<byte[]>(new[] { rngBytes, rngBytes }));
 
         var mi = typeof(NuidWriter).GetMethod("GetPrefix", BindingFlags.Static | BindingFlags.NonPublic);
-        var mGetPrefix = mi!.CreateDelegate<Func<RandomNumberGenerator, char[]>>();
+        var mGetPrefix = (Func<RandomNumberGenerator, char[]>)mi!.CreateDelegate(typeof(Func<RandomNumberGenerator, char[]>));
 
         // Act
         var prefix = mGetPrefix(rng);
@@ -214,7 +214,7 @@ public class NuidWriterTests
 
         foreach (var (nuid, threadId) in nuids.ToList())
         {
-            var prefix = new string(nuid.AsSpan(0, prefixLength));
+            var prefix = new string(nuid.AsSpan(0, prefixLength).ToArray());
             Assert.True(uniquePrefixes.Add(prefix), $"Unique prefix {prefix}");
             Assert.True(uniqueThreadIds.Add(threadId), $"Unique thread id {threadId}");
         }
@@ -223,11 +223,11 @@ public class NuidWriterTests
         Assert.Equal(10, uniqueThreadIds.Count);
     }
 
-    [Fact(Skip = "long running")]
+    [Fact]
     public void AllNuidsAreUnique()
     {
         const int count = 1_000 * 1_000 * 10;
-        var nuids = new HashSet<string>(count);
+        var nuids = new HashSet<string>();
 
         var buffer = new char[22];
 
@@ -249,7 +249,7 @@ public class NuidWriterTests
         }
     }
 
-    [Fact(Skip = "long running")]
+    [Fact]
     public void AllNuidsAreUnique_SmallSequentials()
     {
         var writeFailed = false;
@@ -272,7 +272,7 @@ public class NuidWriterTests
                             return;
                         }
 
-                        var nuid = new string(buffer);
+                        var nuid = new string(buffer.ToArray());
 
                         if (!nuids.Add(nuid))
                         {
@@ -292,7 +292,7 @@ public class NuidWriterTests
         Assert.Equal(string.Empty, duplicateFailure);
     }
 
-    [Fact(Skip = "long running")]
+    [Fact]
     public void AllNuidsAreUnique_ZeroSequential()
     {
         var writeFailed = false;
@@ -314,7 +314,7 @@ public class NuidWriterTests
                     return;
                 }
 
-                var nuid = new string(buffer);
+                var nuid = new string(buffer.ToArray());
 
                 if (!nuids.Add(nuid))
                 {

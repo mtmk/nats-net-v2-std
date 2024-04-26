@@ -86,10 +86,17 @@ internal sealed class NatsReadProtocolProcessor : IAsyncDisposable
 
     private static int GetInt32(in ReadOnlySequence<byte> sequence)
     {
+#if NET6_0_OR_GREATER
         if (sequence.IsSingleSegment || sequence.FirstSpan.Length <= 10)
         {
             return GetInt32(sequence.FirstSpan);
         }
+#else
+        if (sequence.IsSingleSegment || sequence.First.Span.Length <= 10)
+        {
+            return GetInt32(sequence.First.Span);
+        }
+#endif
 
         Span<byte> buf = stackalloc byte[Math.Min((int)sequence.Length, 10)];
         sequence.Slice(buf.Length).CopyTo(buf);
@@ -300,7 +307,9 @@ internal sealed class NatsReadProtocolProcessor : IAsyncDisposable
         }
     }
 
+#if NET6_0_OR_GREATER
     [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder<>))]
+#endif
     private async ValueTask<ReadOnlySequence<byte>> DispatchCommandAsync(int code, ReadOnlySequence<byte> buffer)
     {
         var length = (int)buffer.Length;
@@ -458,7 +467,11 @@ internal sealed class NatsReadProtocolProcessor : IAsyncDisposable
     {
         if (msgHeader.IsSingleSegment)
         {
+#if NET6_0_OR_GREATER
             return ParseMessageHeader(msgHeader.FirstSpan);
+#else
+            return ParseMessageHeader(msgHeader.First.Span);
+#endif
         }
 
         // header parsing use Slice frequently so ReadOnlySequence is high cost, should use Span.
@@ -519,7 +532,11 @@ internal sealed class NatsReadProtocolProcessor : IAsyncDisposable
     {
         if (msgHeader.IsSingleSegment)
         {
+#if NET6_0_OR_GREATER
             return ParseHMessageHeader(msgHeader.FirstSpan);
+#else
+            return ParseHMessageHeader(msgHeader.First.Span);
+#endif
         }
 
         // header parsing use Slice frequently so ReadOnlySequence is high cost, should use Span.

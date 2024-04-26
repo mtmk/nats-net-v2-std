@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace NATS.Client.Core.Internal;
 
@@ -60,14 +61,24 @@ internal sealed class WebSocketConnection : ISocketConnection
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async ValueTask<int> SendAsync(ReadOnlyMemory<byte> buffer)
     {
+#if NET6_0_OR_GREATER
         await _socket.SendAsync(buffer, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, CancellationToken.None).ConfigureAwait(false);
+#else
+        MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment);
+        await _socket.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
+#endif
         return buffer.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async ValueTask<int> ReceiveAsync(Memory<byte> buffer)
     {
+#if NET6_0_OR_GREATER
         var wsRead = await _socket.ReceiveAsync(buffer, CancellationToken.None).ConfigureAwait(false);
+#else
+        MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment);
+        var wsRead = await _socket.ReceiveAsync(segment, CancellationToken.None).ConfigureAwait(false);
+#endif
         return wsRead.Count;
     }
 

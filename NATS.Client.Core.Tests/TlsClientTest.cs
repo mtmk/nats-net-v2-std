@@ -7,6 +7,7 @@ namespace NATS.Client.Core.Tests;
 
 public class TlsClientTest
 {
+#if NET6_0_OR_GREATER
     private readonly ITestOutputHelper _output;
 
     public TlsClientTest(ITestOutputHelper output) => _output = output;
@@ -27,7 +28,7 @@ public class TlsClientTest
         Assert.True(rtt > TimeSpan.Zero);
     }
 
-    [Fact]
+    [Fact(Timeout = 30000)]
     public async Task Client_connect_using_certificate_and_revocation_check()
     {
         await using var server = NatsServer.Start(
@@ -70,7 +71,7 @@ public class TlsClientTest
         await Task.WhenAny(exceptionTask, Task.Delay(3000));
     }
 
-    [Fact]
+    [Fact(Timeout = 30000)]
     public async Task Client_timeout_during_tls_auth()
     {
         var server = new TcpListener(IPAddress.Parse("127.0.0.1"), 0);
@@ -111,4 +112,5 @@ public class TlsClientTest
         signal.Pulse();
         await serverTask;
     }
+#endif
 }

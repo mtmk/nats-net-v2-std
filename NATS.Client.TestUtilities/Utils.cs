@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using NATS.Client.TestUtilities;
 
 namespace NATS.Client.Core.Tests;
 

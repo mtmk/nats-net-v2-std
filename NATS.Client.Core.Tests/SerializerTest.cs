@@ -307,7 +307,7 @@ public class TestSerializerWithEmpty<T> : INatsSerializer<T>
 {
     public T? Deserialize(in ReadOnlySequence<byte> buffer) => (T)(object)(buffer.IsEmpty
         ? new TestData("__EMPTY__")
-        : new TestData(Encoding.ASCII.GetString(buffer)));
+        : new TestData(Encoding.ASCII.GetString(buffer.ToArray())));
 
     public void Serialize(IBufferWriter<byte> bufferWriter, T value) => throw new Exception("not used");
 }

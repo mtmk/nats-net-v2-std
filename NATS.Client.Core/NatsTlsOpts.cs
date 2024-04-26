@@ -61,10 +61,12 @@ public sealed record NatsTlsOpts
     /// </remarks>
     public string? KeyFile { get; init; }
 
+#if NET6_0_OR_GREATER
     /// <summary>
     /// Callback to configure <see cref="SslClientAuthenticationOptions"/>
     /// </summary>
     public Func<SslClientAuthenticationOptions, ValueTask>? ConfigureClientAuthentication { get; init; }
+#endif
 
     /// <summary>
     /// Callback that loads Client Certificate
@@ -103,8 +105,13 @@ public sealed record NatsTlsOpts
     /// <summary>TLS mode to use during connection</summary>
     public TlsMode Mode { get; init; }
 
+#if NET6_0_OR_GREATER
     internal bool HasTlsCerts => CertFile != default || KeyFile != default || CaFile != default || ConfigureClientAuthentication != default;
+#else
+    internal bool HasTlsCerts => CertFile != default || KeyFile != default || CaFile != default;
+#endif
 
+#if NET6_0_OR_GREATER
     /// <summary>
     /// Helper method to load a Client Certificate from a pem-encoded string
     /// </summary>
@@ -131,6 +138,7 @@ public sealed record NatsTlsOpts
         caCerts.ImportFromPem(caPem);
         return () => ValueTask.FromResult(caCerts);
     }
+#endif
 
     internal TlsMode EffectiveMode(NatsUri uri) => Mode switch
     {
@@ -144,6 +152,7 @@ public sealed record NatsTlsOpts
         return effectiveMode is TlsMode.Require or TlsMode.Prefer;
     }
 
+#if NET6_0_OR_GREATER
     internal async ValueTask<SslClientAuthenticationOptions> AuthenticateAsClientOptionsAsync(NatsUri uri)
     {
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -206,4 +215,6 @@ public sealed record NatsTlsOpts
         return options;
 #pragma warning restore CS0618 // Type or member is obsolete
     }
+#endif
+
 }

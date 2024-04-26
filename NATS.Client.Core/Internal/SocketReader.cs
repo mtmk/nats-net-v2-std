@@ -27,7 +27,9 @@ internal sealed class SocketReader
         _isTraceLogging = _logger.IsEnabled(LogLevel.Trace);
     }
 
+#if NET6_0_OR_GREATER
     [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder<>))]
+#endif
     public async ValueTask<ReadOnlySequence<byte>> ReadAtLeastAsync(int minimumSize)
     {
         var totalRead = 0;
@@ -73,7 +75,9 @@ internal sealed class SocketReader
         return _seqeunceBuilder.ToReadOnlySequence();
     }
 
+#if NET6_0_OR_GREATER
     [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder<>))]
+#endif
     public async ValueTask<ReadOnlySequence<byte>> ReadUntilReceiveNewLineAsync()
     {
         while (true)

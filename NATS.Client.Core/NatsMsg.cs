@@ -280,8 +280,10 @@ public readonly record struct NatsMsg<T>(
         return new NatsMsg<T>(subject, replyTo, (int)size, headers, data, connection);
     }
 
+#if NET6_0_OR_GREATER
     [MemberNotNull(nameof(Connection))]
     [MemberNotNull(nameof(ReplyTo))]
+#endif
     private void CheckReplyPreconditions()
     {
         if (Connection == default)

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using NATS.Client.Core.Internal;
 
 namespace NATS.Client.Core;
 
@@ -375,7 +376,11 @@ public class NatsUtf8PrimitivesSerializer<T> : INatsSerializer<T>
             return (T)(object)Encoding.UTF8.GetString(buffer);
         }
 
+#if NET6_0_OR_GREATER
         var span = buffer.IsSingleSegment ? buffer.FirstSpan : buffer.ToArray();
+#else
+        var span = buffer.IsSingleSegment ? buffer.First.Span : buffer.ToArray();
+#endif
 
         if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(DateTime?))
         {
@@ -621,7 +626,11 @@ public class NatsRawSerializer<T> : INatsSerializer<T>
         {
             if (readOnlySequence.IsSingleSegment)
             {
+#if NET6_0_OR_GREATER
                 bufferWriter.Write(readOnlySequence.FirstSpan);
+#else
+                bufferWriter.Write(readOnlySequence.First.Span);
+#endif
             }
             else
             {

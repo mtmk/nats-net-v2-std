@@ -177,6 +177,7 @@ public struct NatsMemoryOwner<T> : IMemoryOwner<T>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
+#if NET6_0_OR_GREATER
             var array = _array;
 
             if (array is null)
@@ -196,9 +197,13 @@ public struct NatsMemoryOwner<T> : IMemoryOwner<T>
             // default Span<T> constructor and paying the cost of the extra conditional branches,
             // especially if T is a value type, in which case the covariance check is JIT removed.
             return MemoryMarshal.CreateSpan(ref r0, _length);
+#else
+            return _array.AsSpan().Slice(_start, _length);
+#endif
         }
     }
 
+#if NET6_0_OR_GREATER
     /// <summary>
     /// Returns a reference to the first element within the current instance, with no bounds check.
     /// </summary>
@@ -221,6 +226,7 @@ public struct NatsMemoryOwner<T> : IMemoryOwner<T>
 
         return ref array!.DangerousGetReferenceAt(_start);
     }
+#endif
 
     /// <summary>
     /// Gets an <see cref="ArraySegment{T}"/> instance wrapping the underlying <typeparamref name="T"/> array in use.
@@ -346,21 +352,9 @@ public struct NatsMemoryOwner<T> : IMemoryOwner<T>
     }
 }
 
+#if NET6_0_OR_GREATER
 internal static class NatsMemoryOwnerArrayExtensions
 {
-    /// <summary>
-    /// Returns a reference to the first element within a given <typeparamref name="T"/> array, with no bounds checks.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the input <typeparamref name="T"/> array instance.</typeparam>
-    /// <param name="array">The input <typeparamref name="T"/> array instance.</param>
-    /// <returns>A reference to the first element within <paramref name="array"/>, or the location it would have used, if <paramref name="array"/> is empty.</returns>
-    /// <remarks>This method doesn't do any bounds checks, therefore it is responsibility of the caller to perform checks in case the returned value is dereferenced.</remarks>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ref T DangerousGetReference<T>(this T[] array)
-    {
-        return ref MemoryMarshal.GetArrayDataReference(array);
-    }
-
     /// <summary>
     /// Returns a reference to an element at a specified index within a given <typeparamref name="T"/> array, with no bounds checks.
     /// </summary>
@@ -379,3 +373,4 @@ internal static class NatsMemoryOwnerArrayExtensions
 #pragma warning restore CS8619
     }
 }
+#endif

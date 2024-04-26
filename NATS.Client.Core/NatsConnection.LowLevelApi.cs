@@ -1,5 +1,7 @@
 namespace NATS.Client.Core;
 
+using NATS.Client.Core.Internal;
+
 public partial class NatsConnection
 {
     internal ValueTask SubAsync(NatsSubBase sub, CancellationToken cancellationToken = default) =>
